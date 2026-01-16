@@ -188,6 +188,24 @@ ralph resume
 ralph run --dry-run
 ```
 
+### Alternative: SOP-Driven Sessions
+
+For standalone planning and task generation (without Ralph's event loop), use these commands:
+
+```bash
+# Start an interactive PDD planning session
+ralph plan                           # SOP prompts for input
+ralph plan "build a REST API"        # Provide idea inline
+ralph plan --backend kiro "my idea"  # Use specific backend
+
+# Generate code task files from descriptions
+ralph task                           # SOP prompts for input
+ralph task "add authentication"      # From description
+ralph task specs/feature/plan.md     # From PDD plan file
+```
+
+These commands spawn an interactive AI session with bundled SOPs — perfect for one-off planning without configuring a full workflow.
+
 ## Configuration
 
 Ralph uses a YAML configuration file (`ralph.yml` by default).
@@ -348,6 +366,8 @@ tests: pass, lint: pass, typecheck: pass
 |---------|-------------|
 | `ralph run` | Run the orchestration loop (default) |
 | `ralph resume` | Resume from existing scratchpad |
+| `ralph plan` | Start an interactive PDD planning session |
+| `ralph task` | Start an interactive code-task-generator session |
 | `ralph events` | View event history |
 | `ralph init` | Initialize configuration file |
 | `ralph clean` | Clean up `.agent/` directory |
@@ -384,6 +404,20 @@ tests: pass, lint: pass, typecheck: pass
 | `--preset <NAME>` | Use preset configuration |
 | `--list-presets` | List available presets |
 | `--force` | Overwrite existing config |
+
+### `ralph plan` Options
+
+| Option | Description |
+|--------|-------------|
+| `<IDEA>` | Optional rough idea to develop (SOP prompts if not provided) |
+| `-b, --backend <BACKEND>` | Backend to use (overrides config and auto-detection) |
+
+### `ralph task` Options
+
+| Option | Description |
+|--------|-------------|
+| `<INPUT>` | Optional description text or path to PDD plan file |
+| `-b, --backend <BACKEND>` | Backend to use (overrides config and auto-detection) |
 
 ## Architecture
 
