@@ -96,8 +96,7 @@ impl CliBackend {
                 "--verbose".to_string(),
                 "--output-format".to_string(),
                 "stream-json".to_string(),
-                "--disallowedTools".to_string(),
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet".to_string(),
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet".to_string(),
             ],
             prompt_mode: PromptMode::Arg,
             prompt_flag: Some("-p".to_string()),
@@ -112,13 +111,14 @@ impl CliBackend {
     ///
     /// Note: This is NOT for TUI mode - Ralph's TUI uses the standard `claude()`
     /// backend. This is for cases where Claude's interactive mode is needed.
+    /// Uses `=` syntax for `--disallowedTools` to prevent variadic consumption
+    /// of the positional prompt argument.
     pub fn claude_interactive() -> Self {
         Self {
             command: "claude".to_string(),
             args: vec![
                 "--dangerously-skip-permissions".to_string(),
-                "--disallowedTools".to_string(),
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet".to_string(),
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet".to_string(),
             ],
             prompt_mode: PromptMode::Arg,
             prompt_flag: None,
@@ -563,8 +563,7 @@ mod tests {
                 "--verbose",
                 "--output-format",
                 "stream-json",
-                "--disallowedTools",
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
                 "-p",
                 "test prompt"
             ]
@@ -579,14 +578,14 @@ mod tests {
         let (cmd, args, stdin, _temp) = backend.build_command("test prompt", false);
 
         assert_eq!(cmd, "claude");
-        // Should have --dangerously-skip-permissions, --disallowedTools, and prompt as positional arg
+        // Should have --dangerously-skip-permissions, --disallowedTools=..., and prompt as positional arg
         // No -p flag, no --output-format, no --verbose
+        // Uses = syntax to prevent variadic consumption of the prompt
         assert_eq!(
             args,
             vec![
                 "--dangerously-skip-permissions",
-                "--disallowedTools",
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
                 "test prompt"
             ]
         );
@@ -784,8 +783,7 @@ mod tests {
                 "--verbose",
                 "--output-format",
                 "stream-json",
-                "--disallowedTools",
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
                 "-p",
                 "test prompt"
             ]
@@ -1039,8 +1037,7 @@ mod tests {
             args,
             vec![
                 "--dangerously-skip-permissions",
-                "--disallowedTools",
-                "TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
+                "--disallowedTools=TodoWrite,TaskCreate,TaskUpdate,TaskList,TaskGet",
                 "test prompt"
             ]
         );
