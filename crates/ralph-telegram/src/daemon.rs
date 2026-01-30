@@ -18,6 +18,7 @@ use tracing::{info, warn};
 use ralph_proto::daemon::{DaemonAdapter, StartLoopFn};
 
 use crate::bot::{BotApi, TelegramBot, escape_html};
+use crate::loop_lock::{LockState, lock_path, lock_state};
 
 /// A Telegram-based daemon adapter.
 ///
@@ -101,13 +102,17 @@ impl DaemonAdapter for TelegramDaemon {
                 if text.starts_with('/') {
                     match text.split_whitespace().next().unwrap_or("") {
                         "/status" => {
-                            let lock_path = workspace_root.join(".ralph/loop.lock");
-                            let msg = if lock_path.exists() {
-                                "A loop is running."
-                            } else {
-                                "Idle — waiting for messages."
+                            let msg = match lock_state(&workspace_root) {
+                                Ok(LockState::Active) => "A loop is running.".to_string(),
+                                Ok(LockState::Stale) => {
+                                    "No active loop (stale lock file found).".to_string()
+                                }
+                                Ok(LockState::Inactive) => {
+                                    "Idle — waiting for messages.".to_string()
+                                }
+                                Err(e) => format!("Failed to check lock state: {}", e),
                             };
-                            let _ = bot.send_message(chat_id, msg).await;
+                            let _ = bot.send_message(chat_id, &msg).await;
                         }
                         _ => {
                             let _ = bot
@@ -122,8 +127,21 @@ impl DaemonAdapter for TelegramDaemon {
                 }
 
                 // Regular message → check lock state
-                let lock_path = workspace_root.join(".ralph/loop.lock");
-                if lock_path.exists() {
+                let lock_path = lock_path(&workspace_root);
+                let state = match lock_state(&workspace_root) {
+                    Ok(state) => state,
+                    Err(e) => {
+                        warn!(error = %e, "Failed to check loop lock state");
+                        let _ = bot
+                            .send_message(
+                                chat_id,
+                                "Failed to check loop state; try again in a moment.",
+                            )
+                            .await;
+                        continue;
+                    }
+                };
+                if state == LockState::Active {
                     let _ = bot
                         .send_message(
                             chat_id,
@@ -131,6 +149,13 @@ impl DaemonAdapter for TelegramDaemon {
                         )
                         .await;
                     continue;
+                }
+
+                if state == LockState::Stale {
+                    warn!(
+                        lock_path = %lock_path.display(),
+                        "Found stale loop lock; starting new loop"
+                    );
                 }
 
                 // No loop running — start one with this message as prompt

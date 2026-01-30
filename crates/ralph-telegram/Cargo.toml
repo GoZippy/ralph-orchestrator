@@ -3,6 +3,8 @@ name = "ralph-telegram"
 edition.workspace = true
 version.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
 description = "Telegram integration for human-in-the-loop orchestration in Ralph"
 
 [lints]
@@ -22,6 +24,9 @@ chrono.workspace = true
 
 # Telegram bot framework
 teloxide.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+nix = { workspace = true }
 
 [dev-dependencies]
 tempfile.workspace = true

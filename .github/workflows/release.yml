@@ -298,10 +298,14 @@ jobs:
       - name: Publish crates to crates.io
         run: |
           # Publish crates in dependency order with delays for registry indexing
-          # Order: ralph-proto -> ralph-core -> ralph-adapters, ralph-tui -> ralph-cli
+          # Order: ralph-proto -> ralph-telegram -> ralph-core -> ralph-adapters, ralph-tui -> ralph-cli
 
           echo "Publishing ralph-proto..."
           cargo publish -p ralph-proto --no-verify
+          sleep 30
+
+          echo "Publishing ralph-telegram..."
+          cargo publish -p ralph-telegram --no-verify
           sleep 30
 
           echo "Publishing ralph-core..."
